@@ -1,0 +1,61 @@
+{
+  "expo": {
+    "name": "BFA NET",
+    "slug": "bfa-net",
+    "scheme": "bfanet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "ao.bfanet.mobile",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Use o Face ID para desbloquear o BFA NET.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "ao.bfanet.mobile",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": "Use o Face ID para entrar no BFA NET e proteger as suas credenciais."
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Use o Face ID para entrar no BFA NET."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "A câmara é usada para ler códigos QR de pagamento.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Escolha uma fotografia de perfil."
+        }
+      ],
+      "expo-sharing"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
