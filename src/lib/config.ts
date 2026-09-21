@@ -1,8 +1,9 @@
 import { Platform } from "react-native";
 
-// Android emulators reach the host machine at 10.0.2.2. For a physical device set EXPO_PUBLIC_API_URL to the LAN address.
-const fallback = Platform.OS === "android" ? "http://10.0.2.2:5080" : "http://localhost:5080";
-export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? fallback).replace(/\/$/, "");
+// Deployed API. Override with EXPO_PUBLIC_API_URL to develop against a local backend
+// (Android emulator: http://10.0.2.2:5080 · iOS simulator: http://localhost:5080 · phone: http://<LAN-IP>:5080).
+const DEFAULT_API_URL = "https://bfa-api.josemarsilva.me";
+export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? DEFAULT_API_URL).replace(/\/$/, "");
 
 // Release builds must never talk to the bank over cleartext HTTP.
 if (!__DEV__ && !API_URL.startsWith("https://")) throw new Error("EXPO_PUBLIC_API_URL deve usar HTTPS em produção.");

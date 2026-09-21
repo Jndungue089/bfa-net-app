@@ -19,6 +19,7 @@ export default function TabsLayout() {
     }}>
       <Tabs.Screen name="index" options={tab("Resumo", "home-outline", "home")} />
       <Tabs.Screen name="services" options={tab("Serviços", "grid-outline", "grid")} />
+      <Tabs.Screen name="assistant" options={tab("Assistente", "sparkles-outline", "sparkles")} />
       <Tabs.Screen name="cards" options={tab("Cartões", "card-outline", "card")} />
       <Tabs.Screen name="profile" options={tab("Perfil", "person-outline", "person")} />
     </Tabs>

@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { ApiError, newIdempotencyKey, type Card, type Direction, type Receipt, type StatementItem } from "@bfa/shared";
+import { ApiError, newIdempotencyKey, type Card, type Direction, type Loan, type Receipt, type StatementItem } from "@bfa/shared";
 import { bankApi } from "@/lib/api";
 
 // ---------- accounts ----------
@@ -136,7 +136,7 @@ export function useIdempotencyKey() {
   return useMemo(() => ({ current: () => ref.current, rotate: () => { ref.current = newIdempotencyKey(); } }), []);
 }
 
-function useMoneyMutation<V>(run: (key: string, v: V) => Promise<Receipt>) {
+function useMoneyMutation<V, R = Receipt>(run: (key: string, v: V) => Promise<R>) {
   const qc = useQueryClient();
   const key = useIdempotencyKey();
   const mutation = useMutation({
@@ -145,6 +145,7 @@ function useMoneyMutation<V>(run: (key: string, v: V) => Promise<Receipt>) {
       key.rotate();
       qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.invalidateQueries({ queryKey: ["statement"] });
+      qc.invalidateQueries({ queryKey: ["assistant"] }); // insights and credit depend on the ledger
     },
     onError: (e) => {
       // A definitive server verdict (4xx) closes the intent; network errors keep the key so a retry is safe.
@@ -165,3 +166,22 @@ export const usePayService = () => useMoneyMutation<ServiceBody>((k, v) => bankA
 export const useRecharge = () => useMoneyMutation<RechargeBody>((k, v) => bankApi.money.recharge(k, v));
 export const usePayState = () => useMoneyMutation<StateBody>((k, v) => bankApi.money.payState(k, v));
 export const useKwikTransfer = () => useMoneyMutation<KwikBody>((k, v) => bankApi.money.kwikTransfer(k, v));
+
+// ---------- financial assistant ----------
+export const useInsights = () => useQuery({ queryKey: ["assistant", "insights"], queryFn: () => bankApi.assistant.insights(), staleTime: 30_000 });
+export const useCreditOffer = () => useQuery({ queryKey: ["assistant", "credit"], queryFn: () => bankApi.assistant.credit(), staleTime: 30_000 });
+export const useLoans = () => useQuery({ queryKey: ["assistant", "loans"], queryFn: () => bankApi.assistant.loans() });
+
+/** Server-computed simulation (rate, fee, instalment); previous result stays on screen while the next one loads. */
+export function useCreditSimulation(amount: number, months: number, enabled: boolean) {
+  return useQuery({
+    queryKey: ["assistant", "simulation", amount, months],
+    queryFn: () => bankApi.assistant.simulate(amount, months),
+    enabled: enabled && Number.isFinite(amount) && amount > 0 && months > 0,
+    placeholderData: keepPreviousData, retry: false, staleTime: 60_000,
+  });
+}
+
+type AcceptBody = Parameters<typeof bankApi.assistant.accept>[1];
+export const useAcceptCredit = () => useMoneyMutation<AcceptBody, Loan>((k, v) => bankApi.assistant.accept(k, v));
+export const useRepayLoan = (loanId: string) => useMoneyMutation<{ fromAccountId: string; pin: string }>((k, v) => bankApi.assistant.repay(k, loanId, v));
